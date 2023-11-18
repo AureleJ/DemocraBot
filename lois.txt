@@ -1,0 +1,29 @@
+Article 0 : EULA
+Tout article ici défini sera sujet aux modifications et changements considérés nécessaires par toute autorité supérieure, ou légalement et démocratiquement votés et/ou redéfinis par la communauté de "La commu". Les articles ici présents concernent l'entièreté de la communauté ayant usage de ce serveur discord.
+ 
+Article 1 : Vote démocratique
+Tout vote est considéré légalement déclaré lorsque le message est placé en @- mentionnant tous les concernés, c'est à dire everyone dans la catégorie "Communauté", et proposant distinctement les options de rendu du vote au travers d'un ✅ ( : white_check_mark : ), et d'un ❌ ( : x : ), ou alors d'un série de 1️⃣ ( : one : ) , 2️⃣ ( : two : ), 3️⃣ ( : three : ), etc...
+ 
+Article 2 : Loi française
+Toute loi définie sur les textes de lois françaises s'appliquent évidemment ici. Il n'appartient cependant qu'à nous de juger si oui ou non elles sont transgressées, dans le cas où il ne s'agit pas d'un problème majeur entrainant le recours aux forces de l'ordre physique.
+ 
+Article 3 : Sanctions
+Toute sanction est considérée légalement appliquée si la majorité de la population l'accepte. Cependant l'autorité supérieure s'accorde le droit d'exprimer une sanction plus sévère si elle le juge réellement nécessaire, et elle seule peut exécuter toute punition interne à ce domaine.
+ 
+Article 4 : Invitations
+Inviter de nouveaux membres requiert l'accord ou au moins l'aval de plusieurs autres membres de cette communauté. Les nouveaux membres ne bénéficient pas de ce droit avant d'être considérés assez "vieux" sur le serveur.
+ 
+Article 5 : Rôles
+5.1. Tout rôle en vert défini une position de GM, et est temporaire afin de permettre à la personne concernée d'exécuter comme elle l'entends l'évènement dont elle a la charge. Les GM ont un contrôle quasi-total sur la catégorie "évènements".
+5.2. Le rôle "Muted" est accordé aux membres sous l'effet de mute, leur interdisant l'usage des salons écrits pendant la durée de leur sanction
+5.3. Tout rôle ne changeant pas la couleur de pseudonyme est considéré "inférieur", et n'accorde pas de droit particulier. Il en est ainsi afin de ne pas différencier inutilement les membres de cette communauté. Il est possible de demander la création de ces rôles avec une raison valable, comme dans l'objectif de renforcer le RP de la cour de justice.
+ 
+Article 6 : Cour de justice
+La cour de justice est un lieu où vous pouvez régler de manière RP (ou non) vos différents avec les autres membres où discuter d'un sujet important et qui requiert le jugement de "La commu". Les jugements fonctionnent ainsi :
+Il-y-a un accusé.
+son avocat, une personne choisie par l'accusé, qui ne peut se dérober à son devoir sans justificatif valable le moment du jugement. Ne pas défendre son client amène l'avocat à ne plus jamais pouvoir être placé à ce poste.
+le juge, position prise par l'autorité supérieure, qui encadre les débats.
+le procureur, représentant de la communauté, qui doit affronter pour tous les autres l'accusé et son avocat, et est choisi par les jurés.
+le jurés sont finalement tous les autres membres présents à ce moment-là, et rendent leur jugement à la fin du procès, agissant comme réponse absolue au sujet traité. Ils ne sont autorisés parler que s'ils sont appelés en tant que témoins ou quand ils doivent finalement rendre leur jugement.
+
+Article spécial :
