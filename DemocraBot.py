@@ -27,7 +27,7 @@ async def on_ready():
 
 
 @bot.hybrid_command()
-async def voltaire(ctx, message=" "):
+async def voltaire(ctx, *, message):
     await ctx.send(f"{message} : https://www.projet-voltaire.fr/")
 
 
@@ -101,6 +101,18 @@ class MyView(discord.ui.View):
         print(f"Vote pour {self.participant_name}. Nombre total de votes : {vote_counts}")
         print(member_votes)
         await interaction.response.send_message(f"Vous avez voté pour {self.participant_name}", ephemeral=True)
+
+@bot.command()
+async def result(ctx):
+    if member_votes != {}:
+        for participant, vote in vote_counts.items():
+            winner = participant
+
+            if vote >= vote_counts[winner]:
+                winner = "Le vainqueur est : " + participant
+    else:
+        winner = "Le vote n'est pas encore terminé"
+    await ctx.send(winner)
 
 
 @bot.hybrid_command()
