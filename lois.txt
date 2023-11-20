@@ -27,3 +27,10 @@ le procureur, représentant de la communauté, qui doit affronter pour tous les 
 le jurés sont finalement tous les autres membres présents à ce moment-là, et rendent leur jugement à la fin du procès, agissant comme réponse absolue au sujet traité. Ils ne sont autorisés parler que s'ils sont appelés en tant que témoins ou quand ils doivent finalement rendre leur jugement.
 
 Article spécial :
+@Commissaire s'est vu conférer des droits d'administration afin de gérer nos problèmes en l'absence ou défaut technique de l'autorité supérieure
+
+ÉLECTIONS :
+
+Seuls les personnes qui n'ont pas de casier judiciaire peuvent se présenter aux élections. Le casier judiciaire s'efface au bout de 15 jours.
+Le Gouvernement élu peut modifier les lois sauf celles sur le système électif
+L'autorité qui a le pouvoir est dans l'interdiction de supprimer le serveur
