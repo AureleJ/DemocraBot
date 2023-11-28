@@ -1,0 +1,166 @@
+
+
+""" class Select(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="Option 1", description="This is option 1!"),
+            discord.SelectOption(
+                label="Option 2", description="This is option 2!"),
+            discord.SelectOption(
+                label="Option 3", description="This is option 3!")
+        ]
+        super().__init__(placeholder="Select an option",
+                         max_values=1, min_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == "Option 1":
+            await interaction.response.send_message("Option 1", ephemeral=True)
+        elif self.values[0] == "Option 2":
+            await interaction.response.send_message("Option 2", ephemeral=True)
+        elif self.values[0] == "Option 3":
+            await interaction.response.send_message("Option 3", ephemeral=True)
+ """
+
+""" class Buttons(discord.ui.View):
+    @discord.ui.button(label="Green Button", style=discord.ButtonStyle.green)
+    async def green_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message("Clicked !", ephemeral=True)
+
+
+class Select(discord.ui.View):
+    options = [
+        discord.SelectOption(label="Option 1", description="This is option 1!"),
+        discord.SelectOption(label="Option 2", description="This is option 2!"),
+        discord.SelectOption(label="Option 3", description="This is option 3!")
+    ]
+
+    @discord.ui.select(placeholder="Select an option", max_values=1, min_values=1, options=options)
+    async def callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        print(self.options)
+        await interaction.response.send_message(f"Option : {self.options}", ephemeral=True)
+
+
+@bot.command()
+async def menu(ctx):
+    await ctx.send("This message has buttons!", view=Buttons())
+    await ctx.send("Menu!", view=Select()) """
+
+"""class Select(discord.ui.Select):
+    def __init__(self):
+
+
+
+        super().__init__(placeholder="Select an option", max_values=1, min_values=1, options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        print(self.values)
+        await interaction.response.send_message(str(self.values), ephemeral=True)
+
+
+class ViewButton(discord.ui.View):
+    @discord.ui.button(label="Green Button", style=discord.ButtonStyle.green)
+    async def green_button(self, interaction: discord.Interaction):
+
+        view_select = discord.ui.View()
+        view_select.add_item(Select())
+
+        await interaction.edit_original_message(content="Choose an option", view=view_select)
+
+
+@bot.command(name="btn", description="Wonderful button")
+async def btn(ctx):
+    await ctx.send("Click it!", view=ViewButton())
+"""
+
+""" class MyView(discord.ui.View):
+    def __init__(self, participant_name: str):
+        super().__init__()
+        self.participant_name = participant_name
+
+    @discord.ui.button(label="Vote", style=discord.ButtonStyle.green)
+    async def button_callback(self, interaction: discord.Integration, button: discord.ui.Button):
+        vote_counts[self.participant_name] = vote_counts.get(self.participant_name, 0) + 1
+        member_votes[interaction.user.name] = self.participant_name
+        print(
+            f"Vote pour {self.participant_name}. Nombre total de votes : {vote_counts}")
+        print(member_votes)
+        await interaction.response.send_message(f"Vous avez voté pour {self.participant_name}", ephemeral=True)
+ """
+
+""" @bot.command()
+async def result(ctx):
+    if member_votes != {}:
+        for votant, vote in member_votes.items():
+            if vote 
+
+            if vote >= member_votes[winner]:
+                winner = "Le vainqueur est : " + participant
+    else:
+        winner = "Le vote n'est pas encore terminé"
+    await ctx.send(winner) """
+
+""" @bot.hybrid_command()
+async def bras(ctx, membre: discord.Member = None):
+    role_id = 1174640570996633770
+    role = ctx.guild.get_role(role_id)
+    await membre.add_roles(role) """
+
+
+""" servers = [1175946418628862052]
+
+@bot.slash_command(guild_ids=servers, name='timeout', description="mutes/timeouts a member")
+@commands.has_permissions(moderate_members=True)
+# setting each value with a default value of 0 reduces a lot of the code
+async def timeout(ctx, member: Option(discord.Member, required=True), reason: Option(str, required=False), days: Option(int, max_value=27, default=0, required=False), hours: Option(int, default=0, required=False), minutes: Option(int, default=0, required=False), seconds: Option(int, default=0, required=False)):
+    if member.id == ctx.author.id:
+        await ctx.respond("You can't timeout yourself!")
+        return
+    if member.guild_permissions.moderate_members:
+        await ctx.respond("You can't do this, this person is a moderator!")
+        return
+    duration = timedelta(days=days, hours=hours,
+                         minutes=minutes, seconds=seconds)
+    if duration >= timedelta(days=28):  # added to check if time exceeds 28 days
+        # responds, but only the author can see the response
+        await ctx.respond("I can't mute someone for more than 28 days!", ephemeral=True)
+        return
+    if reason == None:
+        await member.timeout_for(duration)
+        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}>.")
+    else:
+        await member.timeout_for(duration, reason=reason)
+        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}> for '{reason}'.")
+
+
+@timeout.error
+async def timeouterror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+    else:
+        raise error
+
+
+@bot.slash_command(guild_ids=servers, name='unmute', description="unmutes/untimeouts a member")
+@commands.has_permissions(moderate_members=True)
+async def unmute(ctx, member: Option(discord.Member, required=True), reason: Option(str, required=False)):
+    if reason == None:
+        await member.remove_timeout()
+        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}>.")
+    else:
+        await member.remove_timeout(reason=reason)
+        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}> for '{reason}'.")
+
+
+@unmute.error
+async def unmuteerror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+    else:
+        raise error
+ """
+
+@bot.hybrid_command()
+async def avatar(ctx, *,  member: discord.Member = None):
+    userAvatarUrl = member.avatar.url
+    await ctx.send(userAvatarUrl)
