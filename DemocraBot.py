@@ -41,13 +41,6 @@ class Sanctions(Enum):
 
 @bot.hybrid_command()
 async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison):
-    if sanction == Sanctions.Kick:
-        await kick(ctx, membre, raison)
-    elif sanction == Sanctions.Ban:
-        await ban(ctx, membre, raison)
-    elif sanction == Sanctions.Mute:
-        await mute(ctx, membre, duree, raison)
-
     embed = discord.Embed(
         description=f"**Jugement de {membre.mention} par {ctx.author.top_role.mention}**",
         colour=0xFF0000,
@@ -61,13 +54,21 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
 
     embed.set_thumbnail(url=membre.avatar.url)
 
-    channel = bot.get_channel(1175946419081850902)
+    # channel = bot.get_channel(1175946419081850902)
+    channel = bot.get_channel(1156260066924707920)
 
     if channel:
         await channel.send(embed=embed)
         await ctx.reply("Le jugement a bien été appliqué", ephemeral=True)
     else:
         await ctx.reply("Le salon de jugement n'a pas été trouvé. Veuillez contacter l'administrateur.")
+
+    if sanction == Sanctions.Kick:
+        await kick(ctx, membre, raison)
+    elif sanction == Sanctions.Ban:
+        await ban(ctx, membre, raison)
+    elif sanction == Sanctions.Mute:
+        await mute(ctx, membre, duree, raison)
 
 
 @bot.hybrid_command(name="mute", description="Muter un membre.")
@@ -107,11 +108,11 @@ async def unmute(ctx, membre: discord.Member):
 @bot.hybrid_command(description="Bannir un membre")
 @commands.has_permissions(ban_members=True)
 async def ban(ctx, membre: discord.Member, raison):
-    user = await bot.fetch_user(int(membre))
+    # user = await bot.fetch_user(int(membre))
 
     await ctx.reply(f"{membre.mention} a été ban pour `{raison}`", ephemeral=True)
     await membre.send(f"Vous avez été ban sur {ctx.guild.name} par {ctx.author.top_role} pour: {raison}")
-    await ctx.guild.ban(user)
+    await ctx.guild.ban(membre)
 
 
 @bot.hybrid_command(description="Débannir un membre")
@@ -145,7 +146,8 @@ async def votes(ctx):
         410111790970568705: ["Campagne", "Liens"],
         328542368037076992: ["Campagne", "Liens"],
         455059373941587988: ["Campagne", "Liens"],
-        712954659773480963: ["Campagne", "Liens"]
+        712954659773480963: ["Campagne", "Liens"],
+        1128365951214157834: ["Campagne", "Liens"],
     }
 
     for participant_id, data in participants.items():
@@ -172,16 +174,22 @@ member_votes = {}
 async def votes_selections(ctx, participants):
     options = []
 
-    for participant_id in participants.values():
+    for participant_id in participants.keys():
         user = await bot.fetch_user(participant_id)
 
         options.append(discord.SelectOption(label=user.global_name))
 
     select = Select(placeholder="Votez ici", options=options)
 
+
+
     async def callbacks(interaction):
-        await interaction.response.send_message(f"Vous avez voté pour {select.values[0]}", ephemeral=True)
-        member_votes[interaction.user.global_name] = select.values[0]
+        if (interaction.user.global_name != select.values[0]):
+            await interaction.response.send_message(f"Vous avez voté pour {select.values[0]}", ephemeral=True)
+            member_votes[interaction.user.global_name] = select.values[0]
+            print(member_votes)
+        else:
+            await interaction.response.send_message("Vous ne pouvez pas voter pour vous même !", ephemeral=True)
 
     select.callback = callbacks
     view = View()
@@ -202,6 +210,11 @@ async def winner(ctx):
     winner = max(vote_counts, key=vote_counts.get)
 
     await ctx.send(f"Le gagnant est {winner} avec {vote_counts[winner]} votes!")
+
+@bot.command()
+async def campagne(ctx):
+    await ctx.author.send("Vous avez effectué la commande campagne")
+    await ctx.author.send("Veuillez envoyer d'abord le texte de votre campagne ici")
 
 
 @bot.command()
