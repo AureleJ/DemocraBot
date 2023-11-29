@@ -137,25 +137,75 @@ async def kick(ctx, membre: discord.Member, raison):
     await membre.send(f"Vous avez été kick sur {ctx.guild.name} par {ctx.author.top_role} pour: {raison}")
     await membre.kick(reason=raison)
 
+participants = {
+    328542368037076992: ["Campagne", "Liens", "Description"],
+    455059373941587988: ["Campagne", "Liens", "Description"],
+    712954659773480963: ["Campagne", "Liens", "Description"],
+    1128365951214157834: ["Campagne", "Liens", "Description"],
+}
+
+
+class Candidature(discord.ui.Modal, title='Candidature'):
+    name = discord.ui.TextInput(
+        label='Nom',
+        placeholder='Entrez votre nom ici',
+        required=True,
+    )
+
+    description = discord.ui.TextInput(
+        label='Description personnelle',
+        style=discord.TextStyle.long,
+        placeholder='Ecrivez votre description ici',
+        required=True,
+        max_length=300,
+    )
+
+    campagne = discord.ui.TextInput(
+        label='Votre campagne',
+        style=discord.TextStyle.long,
+        placeholder='Ecrivez votre campagne ici',
+        required=True,
+        max_length=300,
+    )
+
+    links = discord.ui.TextInput(
+        label='Liens a inserer',
+        placeholder='Entrez vos liens ici',
+        required=False,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        participants[interaction.user.id] = [self.campagne.value, self.links.value, self.description.value]
+        await interaction.response.send_message('Votre candidature a ete transmise', ephemeral=True)
+
+@bot.command()
+async def azerty(ctx):
+    await ctx.send(participants)
+
+class Buttons(discord.ui.View):
+    def __init__(self, *, timeout=180):
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(label="Candidater", style=discord.ButtonStyle.blurple)
+    async def blurple_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(Candidature())
+
+
+@bot.command()
+async def campagne(ctx):
+    await ctx.send("Candidater", view=Buttons())
+
 
 @bot.command()
 async def votes(ctx):
     await ctx.send(embed=discord.Embed(title="Jour des votes", description="Chers membres de la communauté, aujourd'hui est le grand jour des votes", color=0x007bff))
-
-    participants = {
-        410111790970568705: ["Campagne", "Liens"],
-        328542368037076992: ["Campagne", "Liens"],
-        455059373941587988: ["Campagne", "Liens"],
-        712954659773480963: ["Campagne", "Liens"],
-        1128365951214157834: ["Campagne", "Liens"],
-    }
 
     for participant_id, data in participants.items():
         user = await bot.fetch_user(participant_id)
 
         embed2 = discord.Embed(
             title=f"Participant {user.global_name}",
-            description="Description personnelle",
+            description= data[2],
             colour=0x007bff
         )
 
@@ -180,8 +230,6 @@ async def votes_selections(ctx, participants):
         options.append(discord.SelectOption(label=user.global_name))
 
     select = Select(placeholder="Votez ici", options=options)
-
-
 
     async def callbacks(interaction):
         if (interaction.user.global_name != select.values[0]):
@@ -210,11 +258,6 @@ async def winner(ctx):
     winner = max(vote_counts, key=vote_counts.get)
 
     await ctx.send(f"Le gagnant est {winner} avec {vote_counts[winner]} votes!")
-
-@bot.command()
-async def campagne(ctx):
-    await ctx.author.send("Vous avez effectué la commande campagne")
-    await ctx.author.send("Veuillez envoyer d'abord le texte de votre campagne ici")
 
 
 @bot.command()
