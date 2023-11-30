@@ -138,10 +138,10 @@ async def kick(ctx, membre: discord.Member, raison):
     await membre.kick(reason=raison)
 
 participants = {
-    328542368037076992: ["Campagne", "Liens", "Description"],
-    455059373941587988: ["Campagne", "Liens", "Description"],
-    712954659773480963: ["Campagne", "Liens", "Description"],
-    1128365951214157834: ["Campagne", "Liens", "Description"],
+    # 328542368037076992: ["Campagne", "Liens", "Description"],
+    # 455059373941587988: ["Campagne", "Liens", "Description"],
+    # 712954659773480963: ["Campagne", "Liens", "Description"],
+    # 1128365951214157834: ["Campagne", "Liens", "Description"],
 }
 
 
@@ -176,11 +176,19 @@ class Candidature(discord.ui.Modal, title='Candidature'):
 
     async def on_submit(self, interaction: discord.Interaction):
         participants[interaction.user.id] = [self.campagne.value, self.links.value, self.description.value]
+        
+        with open("candidatures.json", "w") as f:
+            json.dump(participants, f)
+
         await interaction.response.send_message('Votre candidature a ete transmise', ephemeral=True)
 
 @bot.command()
 async def azerty(ctx):
-    await ctx.send(participants)
+    with open("candidatures.json", "r") as read_file:
+        data = json.load(read_file)
+
+    print(data)
+
 
 class Buttons(discord.ui.View):
     def __init__(self, *, timeout=180):
@@ -317,7 +325,7 @@ async def lois(ctx, loi_id: int = None):
 
 
 @bot.hybrid_command()
-async def commisaire(ctx):
+async def commissaire(ctx):
     await ctx.send("🚨Attention la police rôde toujours🚨")
 
 bot.run(settings.api_key)
