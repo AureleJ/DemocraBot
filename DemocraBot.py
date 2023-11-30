@@ -40,6 +40,7 @@ class Sanctions(Enum):
 
 
 @bot.hybrid_command()
+@commands.has_permissions(moderate_members=True)
 async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison):
     embed = discord.Embed(
         description=f"**Jugement de {membre.mention} par {ctx.author.top_role.mention}**",
@@ -54,7 +55,6 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
 
     embed.set_thumbnail(url=membre.avatar.url)
 
-    # channel = bot.get_channel(1175946419081850902)
     channel = bot.get_channel(1156260066924707920)
 
     if channel:
@@ -137,12 +137,16 @@ async def kick(ctx, membre: discord.Member, raison):
     await membre.send(f"Vous avez été kick sur {ctx.guild.name} par {ctx.author.top_role} pour: {raison}")
     await membre.kick(reason=raison)
 
-participants = {
-    # 328542368037076992: ["Campagne", "Liens", "Description"],
-    # 455059373941587988: ["Campagne", "Liens", "Description"],
-    # 712954659773480963: ["Campagne", "Liens", "Description"],
-    # 1128365951214157834: ["Campagne", "Liens", "Description"],
-}
+
+def get_json_data(path):
+    with open(path, "r", encoding="utf-8") as file_name:
+        data = json.load(file_name)
+    return data
+
+
+def save_json_data(path, data):
+    with open(path, "w", encoding="utf-8") as file_name:
+        data = json.dump(data, file_name, indent=4)
 
 
 class Candidature(discord.ui.Modal, title='Candidature'):
@@ -175,19 +179,25 @@ class Candidature(discord.ui.Modal, title='Candidature'):
     )
 
     async def on_submit(self, interaction: discord.Interaction):
-        participants[interaction.user.id] = [self.campagne.value, self.links.value, self.description.value]
-        
-        with open("candidatures.json", "w") as f:
-            json.dump(participants, f)
+        user_id = str(interaction.user.id)
 
-        await interaction.response.send_message('Votre candidature a ete transmise', ephemeral=True)
+        try:
+            file_data = get_json_data("candidatures.json")
+        except json.decoder.JSONDecodeError:
+            file_data = {}
+
+        file_data[user_id] = [self.campagne.value,
+                              self.links.value, self.description.value]
+
+        save_json_data("candidatures.json", file_data)
+
+        await interaction.response.send_message('Votre candidature a été transmise', ephemeral=True)
+
 
 @bot.command()
 async def azerty(ctx):
-    with open("candidatures.json", "r") as read_file:
-        data = json.load(read_file)
-
-    print(data)
+    file_data = get_json_data("candidatures.json")
+    print(file_data.items())
 
 
 class Buttons(discord.ui.View):
@@ -206,46 +216,49 @@ async def campagne(ctx):
 
 @bot.command()
 async def votes(ctx):
+    options = []
+
     await ctx.send(embed=discord.Embed(title="Jour des votes", description="Chers membres de la communauté, aujourd'hui est le grand jour des votes", color=0x007bff))
 
-    for participant_id, data in participants.items():
-        user = await bot.fetch_user(participant_id)
+    participants = get_json_data("candidatures.json")
+
+    for user_id, user_data in participants.items():
+        participant = await bot.fetch_user(int(user_id))
 
         embed2 = discord.Embed(
-            title=f"Participant {user.global_name}",
-            description= data[2],
+            title=f"Participant {participant.global_name}",
+            description=user_data[0],
             colour=0x007bff
         )
 
-        embed2.add_field(name="Campagne", value=data[0], inline=True)
-        embed2.add_field(name="Liens importants", value=data[1], inline=True)
+        embed2.add_field(name="Campagne", value=user_data[1])
+        embed2.add_field(name="Liens importants", value=user_data[2])
 
-        embed2.set_thumbnail(url=user.avatar.url)
+        embed2.set_thumbnail(url=participant.avatar.url)
 
+        options.append(discord.SelectOption(
+            label=participant.global_name, value=participant.id))
         await ctx.send(embed=embed2)
-
-    await votes_selections(ctx, participants)
-
-member_votes = {}
-
-
-async def votes_selections(ctx, participants):
-    options = []
-
-    for participant_id in participants.keys():
-        user = await bot.fetch_user(participant_id)
-
-        options.append(discord.SelectOption(label=user.global_name))
 
     select = Select(placeholder="Votez ici", options=options)
 
     async def callbacks(interaction):
-        if (interaction.user.global_name != select.values[0]):
-            await interaction.response.send_message(f"Vous avez voté pour {select.values[0]}", ephemeral=True)
-            member_votes[interaction.user.global_name] = select.values[0]
-            print(member_votes)
+        selected_user_id = select.values[0]
+        participant = await bot.fetch_user(selected_user_id)
+
+        if str(interaction.user.id) != str(selected_user_id):
+            try:
+                file_data = get_json_data("votes.json")
+            except json.decoder.JSONDecodeError:
+                file_data = {}
+
+            file_data[interaction.user.id] = selected_user_id
+
+            save_json_data("votes.json", file_data)
+
+            await interaction.response.send_message(f"Vous avez voté pour {participant.global_name}", ephemeral=True)
         else:
-            await interaction.response.send_message("Vous ne pouvez pas voter pour vous même !", ephemeral=True)
+            await interaction.response.send_message("Vous ne pouvez pas voter pour vous-même !", ephemeral=True)
 
     select.callback = callbacks
     view = View()
@@ -256,12 +269,15 @@ async def votes_selections(ctx, participants):
 @bot.command()
 async def winner(ctx):
     vote_counts = {}
+    with open("votes.json", "r") as read_file:
+        votants = json.load(read_file)
 
-    for voted_for in member_votes.values():
-        if voted_for in vote_counts:
-            vote_counts[voted_for] += 1
-        else:
-            vote_counts[voted_for] = 1
+    for vote in votants:
+        for votant, voted_for in vote.items():
+            if voted_for in vote_counts:
+                vote_counts[voted_for] += 1
+            else:
+                vote_counts[voted_for] = 1
 
     winner = max(vote_counts, key=vote_counts.get)
 
