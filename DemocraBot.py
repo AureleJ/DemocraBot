@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from discord import ui, app_commands
 
-from discord.ui import Select, View
+from discord.ui import Select, View, Button, TextInput, Modal
 
 from datetime import date, datetime, timedelta
 import time
@@ -149,14 +149,8 @@ def save_json_data(path, data):
         data = json.dump(data, file_name, indent=4)
 
 
-class Candidature(discord.ui.Modal, title='Candidature'):
-    name = discord.ui.TextInput(
-        label='Nom',
-        placeholder='Entrez votre nom ici',
-        required=True,
-    )
-
-    description = discord.ui.TextInput(
+class Candidature(Modal, title='Candidature'):
+    description = TextInput(
         label='Description personnelle',
         style=discord.TextStyle.long,
         placeholder='Ecrivez votre description ici',
@@ -164,7 +158,7 @@ class Candidature(discord.ui.Modal, title='Candidature'):
         max_length=300,
     )
 
-    campagne = discord.ui.TextInput(
+    campagne = TextInput(
         label='Votre campagne',
         style=discord.TextStyle.long,
         placeholder='Ecrivez votre campagne ici',
@@ -172,7 +166,7 @@ class Candidature(discord.ui.Modal, title='Candidature'):
         max_length=300,
     )
 
-    links = discord.ui.TextInput(
+    links = TextInput(
         label='Liens a inserer',
         placeholder='Entrez vos liens ici',
         required=False,
@@ -186,8 +180,8 @@ class Candidature(discord.ui.Modal, title='Candidature'):
         except json.decoder.JSONDecodeError:
             file_data = {}
 
-        file_data[user_id] = [self.campagne.value,
-                              self.links.value, self.description.value]
+        file_data[user_id] = [self.description.value,
+                              self.campagne.value, self.links.value]
 
         save_json_data("candidatures.json", file_data)
 
@@ -195,23 +189,17 @@ class Candidature(discord.ui.Modal, title='Candidature'):
 
 
 @bot.command()
-async def azerty(ctx):
-    file_data = get_json_data("candidatures.json")
-    print(file_data.items())
+async def candidature(ctx):
+    view = View(timeout=None)
+    buttonCandidature = Button(
+        label="Candidater", style=discord.ButtonStyle.blurple, custom_id="candidate", emoji="🏛️")
 
-
-class Buttons(discord.ui.View):
-    def __init__(self, *, timeout=180):
-        super().__init__(timeout=timeout)
-
-    @discord.ui.button(label="Candidater", style=discord.ButtonStyle.blurple)
-    async def blurple_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def button_callback(interaction: discord.Interaction):
         await interaction.response.send_modal(Candidature())
 
-
-@bot.command()
-async def campagne(ctx):
-    await ctx.send("Candidater", view=Buttons())
+    buttonCandidature.callback = button_callback
+    view.add_item(item=buttonCandidature)
+    await ctx.send(view=view)
 
 
 @bot.command()
@@ -231,8 +219,9 @@ async def votes(ctx):
             colour=0x007bff
         )
 
-        embed2.add_field(name="Campagne", value=user_data[1])
-        embed2.add_field(name="Liens importants", value=user_data[2])
+        embed2.add_field(name="Campagne", value=user_data[1], inline=False)
+        embed2.add_field(name="Liens importants",
+                         value=user_data[2], inline=False)
 
         embed2.set_thumbnail(url=participant.avatar.url)
 
@@ -261,7 +250,7 @@ async def votes(ctx):
             await interaction.response.send_message("Vous ne pouvez pas voter pour vous-même !", ephemeral=True)
 
     select.callback = callbacks
-    view = View()
+    view = View(timeout=None)
     view.add_item(select)
     await ctx.send("Pour qui votez vous ?", view=view)
 
@@ -269,19 +258,19 @@ async def votes(ctx):
 @bot.command()
 async def winner(ctx):
     vote_counts = {}
-    with open("votes.json", "r") as read_file:
-        votants = json.load(read_file)
 
-    for vote in votants:
-        for votant, voted_for in vote.items():
-            if voted_for in vote_counts:
-                vote_counts[voted_for] += 1
-            else:
-                vote_counts[voted_for] = 1
+    file_data = get_json_data("votes.json")
+
+    for voted_for in file_data.values():
+        if voted_for in vote_counts:
+            vote_counts[voted_for] += 1
+        else:
+            vote_counts[voted_for] = 1
 
     winner = max(vote_counts, key=vote_counts.get)
+    user = await bot.fetch_user(winner)
 
-    await ctx.send(f"Le gagnant est {winner} avec {vote_counts[winner]} votes!")
+    await ctx.send(f"Le gagnant est {user.global_name} avec {vote_counts[winner]} votes!")
 
 
 @bot.command()
