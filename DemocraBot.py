@@ -40,8 +40,22 @@ class Sanctions(Enum):
 
 
 @bot.hybrid_command()
-@commands.has_permissions(moderate_members=True)
+# @commands.has_permissions(moderate_members=True)
 async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison):
+    if (ctx.author.top_role.position < membre.top_role.position):
+        await ctx.reply("Vous ne pouvez pas appliquer un jugement sur ce membre", ephemeral=True)
+        return False
+    if (membre.id == ctx.author.id):
+        await ctx.reply("Mais tu peux pas te faire un jugement a toi meme debile va...", ephemeral=True)
+        return False
+
+    if sanction == Sanctions.Kick:
+        await kick(ctx, membre, raison)
+    elif sanction == Sanctions.Ban:
+        await ban(ctx, membre, raison)
+    elif sanction == Sanctions.Mute:
+        await mute(ctx, membre, duree, raison)
+
     embed = discord.Embed(
         description=f"**Jugement de {membre.mention} par {ctx.author.top_role.mention}**",
         colour=0xFF0000,
@@ -51,11 +65,12 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
     embed.set_author(name=ctx.author.top_role, icon_url=ctx.author.avatar.url)
 
     embed.add_field(name="Sanction", value=sanction.value, inline=False)
+    embed.add_field(name="Durée", value=duree, inline=False)
     embed.add_field(name="Raison", value=raison, inline=False)
 
     embed.set_thumbnail(url=membre.avatar.url)
 
-    channel = bot.get_channel(1156260066924707920)
+    channel = bot.get_channel(1179548665073905781)
 
     if channel:
         await channel.send(embed=embed)
@@ -63,31 +78,24 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
     else:
         await ctx.reply("Le salon de jugement n'a pas été trouvé. Veuillez contacter l'administrateur.")
 
-    if sanction == Sanctions.Kick:
-        await kick(ctx, membre, raison)
-    elif sanction == Sanctions.Ban:
-        await ban(ctx, membre, raison)
-    elif sanction == Sanctions.Mute:
-        await mute(ctx, membre, duree, raison)
-
 
 @bot.hybrid_command(name="mute", description="Muter un membre.")
 @commands.has_permissions(moderate_members=True)
 async def mute(ctx, membre: discord.Member, duree, raison):
 
-    if "s" in duree:
+    if "s" in duree or "S" in duree:
         gettime = duree.strip("s")
         newtime = timedelta(seconds=int(gettime))
 
-    if "m" in duree:
+    if "m" in duree or "M" in duree:
         gettime = duree.strip("m")
         newtime = timedelta(minutes=int(gettime))
 
-    if "h" in duree:
+    if "h" in duree or "G" in duree:
         gettime = duree.strip("h")
         newtime = timedelta(hours=int(gettime))
 
-    if "j" in duree:
+    if "j" in duree or "J" in duree:
         gettime = duree.strip("j")
         newtime = timedelta(days=int(gettime))
 
