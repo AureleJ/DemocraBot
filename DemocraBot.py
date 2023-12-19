@@ -1,7 +1,7 @@
 import settings
 import discord
 from discord.ext import commands
-from discord import ui, app_commands
+from discord import app_commands
 
 from discord.ui import Select, View, Button, TextInput, Modal
 
@@ -46,7 +46,7 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
         await ctx.reply("Vous ne pouvez pas appliquer un jugement sur ce membre", ephemeral=True)
         return False
     if (membre.id == ctx.author.id):
-        await ctx.reply("Mais tu peux pas te faire un jugement a toi meme debile va...", ephemeral=True)
+        await ctx.reply("Mais tu peux pas te faire un jugement a toi meme troubadour va...", ephemeral=True)
         return False
 
     if sanction == Sanctions.Kick:
@@ -154,7 +154,7 @@ def get_json_data(path):
 
 def save_json_data(path, data):
     with open(path, "w", encoding="utf-8") as file_name:
-        data = json.dump(data, file_name, indent=4)
+        json.dump(data, file_name, indent=4)
 
 
 class Candidature(Modal, title='Candidature'):
@@ -243,16 +243,16 @@ async def votes(ctx):
         selected_user_id = select.values[0]
         participant = await bot.fetch_user(selected_user_id)
 
-        if str(interaction.user.id) != str(selected_user_id):
-            try:
-                file_data = get_json_data("votes.json")
-            except json.decoder.JSONDecodeError:
-                file_data = {}
+        try:
+            file_data = get_json_data("votes.json")
+        except json.decoder.JSONDecodeError:
+            file_data = {}
 
-            file_data[interaction.user.id] = selected_user_id
+        if str(interaction.user.id) != str(selected_user_id):
+            user_id = str(interaction.user.id)
+            file_data[user_id] = selected_user_id
 
             save_json_data("votes.json", file_data)
-
             await interaction.response.send_message(f"Vous avez voté pour {participant.global_name}", ephemeral=True)
         else:
             await interaction.response.send_message("Vous ne pouvez pas voter pour vous-même !", ephemeral=True)
@@ -275,10 +275,22 @@ async def winner(ctx):
         else:
             vote_counts[voted_for] = 1
 
-    winner = max(vote_counts, key=vote_counts.get)
-    user = await bot.fetch_user(winner)
+    max_count = max(vote_counts.values())
+    winners = [user_votes for user_votes,
+               count in vote_counts.items() if count == max_count]
 
-    await ctx.send(f"Le gagnant est {user.global_name} avec {vote_counts[winner]} votes!")
+    print(winners)
+
+    if len(winners) == 1:
+        winner_user = await bot.fetch_user(winners[0])
+        await ctx.send(f"Le gagnant est {winner_user.global_name} avec {max_count} votes!")
+    else:
+        await ctx.send("Il y a une égalité entre plusieurs participants. Veuillez revoter pour départager!")
+        candidates = get_json_data("candidatures.json")
+        new_candidates = {str(candidate_id): candidates[str(candidate_id)] for candidate_id in winners}
+        save_json_data("candidatures.json", new_candidates)
+        save_json_data("votes.json", {})
+        await ctx.invoke(ctx.bot.get_command('votes'))
 
 
 @bot.command()
