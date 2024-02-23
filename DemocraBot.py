@@ -14,8 +14,10 @@ from enum import Enum
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
+activity = discord.Activity(type=discord.ActivityType.watching, name="si Maxence est sage...")
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents,
+                   activity=activity, status=discord.Status.online)
 
 intents.message_content = True
 intents.guilds = True
@@ -32,6 +34,14 @@ async def on_ready():
         print(e)
 
 
+# @bot.event
+# async def on_message(message):
+#     if 'quoi' in message.content.lower():
+#         emojis = ["🇫", "🇪", "🇺", "🇷"]
+#         for emoji in emojis:
+#             await message.add_reaction(emoji)
+
+
 class Sanctions(Enum):
     Ban = "Ban"
     Kick = "Kick"
@@ -40,7 +50,6 @@ class Sanctions(Enum):
 
 
 @bot.hybrid_command()
-# @commands.has_permissions(moderate_members=True)
 async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison):
     if (ctx.author.top_role.position < membre.top_role.position):
         await ctx.reply("Vous ne pouvez pas appliquer un jugement sur ce membre", ephemeral=True)
@@ -70,14 +79,13 @@ async def jugement(ctx, membre: discord.User, sanction: Sanctions, duree, raison
 
     embed.set_thumbnail(url=membre.avatar.url)
 
-    channel = bot.get_channel(1179548665073905781)
+    channel = bot.get_channel(1156260066924707920)
 
     if channel:
         await channel.send(embed=embed)
         await ctx.reply("Le jugement a bien été appliqué", ephemeral=True)
     else:
         await ctx.reply("Le salon de jugement n'a pas été trouvé. Veuillez contacter l'administrateur.")
-
 
 @bot.hybrid_command(name="mute", description="Muter un membre.")
 @commands.has_permissions(moderate_members=True)
@@ -157,13 +165,87 @@ def save_json_data(path, data):
         json.dump(data, file_name, indent=4)
 
 
+@bot.hybrid_command()
+async def peine(ctx, membre: discord.User, peine):
+
+    if (ctx.author.top_role.position < membre.top_role.position):
+        await ctx.reply("Vous ne pouvez pas appliquer une peine sur ce membre", ephemeral=True)
+        return False
+    if (membre.id == ctx.author.id):
+        await ctx.reply("Mais tu peux pas te faire une peine à toi même troubadour va...", ephemeral=True)
+        return False
+
+    embed = discord.Embed(
+        description=f"**Peine de {membre.mention} par {ctx.author.top_role.mention}**",
+        colour=0x00FF00,
+        timestamp=datetime.now()
+    )
+    embed.set_author(name=ctx.author.top_role, icon_url=ctx.author.avatar.url)
+    embed.add_field(name="Peine", value=peine, inline=False)
+    embed.set_thumbnail(url=membre.avatar.url)
+
+    embed2 = discord.Embed(
+        description=f"**Valider l'inculpation :**",
+        colour=0x00FF00,
+    )    
+    
+    embed3 = discord.Embed(
+        description=f"**Valider le réquisitoire :**",
+        colour=0x00FF00,
+    )
+
+    view1 = View(timeout=None)
+    oui1 = Button(label="Oui", style=discord.ButtonStyle.green, custom_id="oui1")
+    non1 = Button(label="Non", style=discord.ButtonStyle.red, custom_id="non1")    
+    
+    view2 = View(timeout=None)
+    oui2 = Button(label="Oui", style=discord.ButtonStyle.green, custom_id="oui2")
+    non2 = Button(label="Non", style=discord.ButtonStyle.red, custom_id="non2")
+
+    async def vote_callback(interaction: discord.Interaction, vote_type: str):
+        if vote_type == "oui1":
+            await interaction.response.send_message(f"Vous avez voté oui", ephemeral=True)
+        elif vote_type == "non1":
+            await interaction.response.send_message(f"Vous avez voté non", ephemeral=True)
+        elif vote_type == "oui2":
+            await interaction.response.send_message(f"Vous avez voté oui", ephemeral=True)
+        elif vote_type == "non2":
+            await interaction.response.send_message(f"Vous avez voté non", ephemeral=True)
+
+        try:
+            file_data = get_json_data("peines.json")
+        except json.decoder.JSONDecodeError:
+            file_data = {}
+
+        if str(interaction.user.id) not in file_data:
+            file_data[str(interaction.user.id)] = {}
+        file_data[str(interaction.user.id)][vote_type] = membre.id
+        save_json_data("peines.json", file_data)
+
+    oui1.callback = lambda inter: vote_callback(inter, "oui1")
+    non1.callback = lambda inter: vote_callback(inter, "non1")
+    view1.add_item(item=oui1)
+    view1.add_item(item=non1)
+
+    oui2.callback = lambda inter: vote_callback(inter, "oui2")
+    non2.callback = lambda inter: vote_callback(inter, "non2")
+    view2.add_item(item=oui2)
+    view2.add_item(item=non2)
+
+    await ctx.send(embed=embed)
+    await ctx.channel.send(embed=embed2, view=view1)
+    await ctx.channel.send(embed=embed3, view=view2)
+    await ctx.reply("La peine a bien été appliquée", ephemeral=True)
+
+
+
 class Candidature(Modal, title='Candidature'):
-    description = TextInput(
+    description_personnelle = TextInput(
         label='Description personnelle',
         style=discord.TextStyle.long,
         placeholder='Ecrivez votre description ici',
         required=True,
-        max_length=300,
+        max_length=1024,
     )
 
     campagne = TextInput(
@@ -171,11 +253,12 @@ class Candidature(Modal, title='Candidature'):
         style=discord.TextStyle.long,
         placeholder='Ecrivez votre campagne ici',
         required=True,
-        max_length=300,
+        max_length=1024,
     )
 
     links = TextInput(
         label='Liens a inserer',
+        style=discord.TextStyle.short,
         placeholder='Entrez vos liens ici',
         required=False,
     )
@@ -188,7 +271,7 @@ class Candidature(Modal, title='Candidature'):
         except json.decoder.JSONDecodeError:
             file_data = {}
 
-        file_data[user_id] = [self.description.value,
+        file_data[user_id] = [self.description_personnelle.value,
                               self.campagne.value, self.links.value]
 
         save_json_data("candidatures.json", file_data)
@@ -199,8 +282,7 @@ class Candidature(Modal, title='Candidature'):
 @bot.command()
 async def candidature(ctx):
     view = View(timeout=None)
-    buttonCandidature = Button(
-        label="Candidater", style=discord.ButtonStyle.blurple, custom_id="candidate", emoji="🏛️")
+    buttonCandidature = Button(label="Candidater", style=discord.ButtonStyle.blurple, custom_id="candidate", emoji="🏛️")
 
     async def button_callback(interaction: discord.Interaction):
         await interaction.response.send_modal(Candidature())
@@ -208,6 +290,33 @@ async def candidature(ctx):
     buttonCandidature.callback = button_callback
     view.add_item(item=buttonCandidature)
     await ctx.send(view=view)
+
+
+@bot.command()
+async def candidature_delete(ctx):
+    file_data = get_json_data("candidatures.json")
+    user_id = str(ctx.author.id)
+
+    if str(user_id) in file_data:
+        del file_data[str(user_id)]
+        save_json_data("candidatures.json", file_data)
+        await ctx.reply("Votre candidature a été supprimée avec succès.", ephemeral=True)
+    else:
+        await ctx.reply("Aucune candidature trouvée à supprimer.", ephemeral=True)
+
+
+""" @bot.command()
+async def candidature_edit(ctx):
+    view = View(timeout=None)
+    buttonCandidature = Button(label="Modifier la candidature",
+                               style=discord.ButtonStyle.red, custom_id="candidate_edit", emoji="⚙️")
+
+    async def button_callback(interaction: discord.Interaction):
+        await interaction.response.send_modal(Candidature("test"))
+
+    buttonCandidature.callback = button_callback
+    view.add_item(item=buttonCandidature)
+    await ctx.send(view=view) """
 
 
 @bot.command()
@@ -228,13 +337,11 @@ async def votes(ctx):
         )
 
         embed2.add_field(name="Campagne", value=user_data[1], inline=False)
-        embed2.add_field(name="Liens importants",
-                         value=user_data[2], inline=False)
+        embed2.add_field(name="Liens importants", value=user_data[2], inline=False)
 
         embed2.set_thumbnail(url=participant.avatar.url)
 
-        options.append(discord.SelectOption(
-            label=participant.global_name, value=participant.id))
+        options.append(discord.SelectOption(label=participant.global_name, value=participant.id))
         await ctx.send(embed=embed2)
 
     select = Select(placeholder="Votez ici", options=options)
@@ -279,15 +386,20 @@ async def winner(ctx):
     winners = [user_votes for user_votes,
                count in vote_counts.items() if count == max_count]
 
-    print(winners)
+    total_votes = sum(vote_counts.values())
 
     if len(winners) == 1:
         winner_user = await bot.fetch_user(winners[0])
         await ctx.send(f"Le gagnant est {winner_user.global_name} avec {max_count} votes!")
+        for user_votes, count in vote_counts.items():
+            percentage = (count / total_votes) * 100
+            percentage_user = await bot.fetch_user(user_votes)
+            await ctx.send(f"Le candidat {percentage_user.global_name} a été voté à {percentage:.2f}%")
     else:
         await ctx.send("Il y a une égalité entre plusieurs participants. Veuillez revoter pour départager!")
         candidates = get_json_data("candidatures.json")
-        new_candidates = {str(candidate_id): candidates[str(candidate_id)] for candidate_id in winners}
+        new_candidates = {str(candidate_id): candidates[str(
+            candidate_id)] for candidate_id in winners}
         save_json_data("candidatures.json", new_candidates)
         save_json_data("votes.json", {})
         await ctx.invoke(ctx.bot.get_command('votes'))
@@ -296,17 +408,24 @@ async def winner(ctx):
 @bot.command()
 async def del_casier(ctx):
     messages = [message async for message in ctx.channel.history(limit=123, oldest_first=True)]
-    # print(messages[0].content)
-    posted = messages[0].created_at.date().strftime('%d')
-    today = date.today().strftime('%d')
-    if int(today) - int(posted) >= 15:
+
+    if not messages:
+        await ctx.send("Aucun message trouvé.")
+        return
+
+    posted_date = messages[0].created_at.date()
+    today = datetime.now().date()
+
+    days_difference = (today - posted_date).days
+
+    if days_difference >= 15:
         await messages[0].delete()
-        botMessage = await ctx.reply("Le dernier message a ete suprimmé", ephemeral=True)
+        botMessage = await ctx.reply("Le dernier message a été supprimé", ephemeral=True)
         time.sleep(2)
         await botMessage.delete()
         await ctx.message.delete()
     else:
-        botMessage = await ctx.reply("La suppression des messages est a jour", ephemeral=True)
+        botMessage = await ctx.reply("La suppression des messages est à jour", ephemeral=True)
         time.sleep(2)
         await botMessage.delete()
         await ctx.message.delete()
