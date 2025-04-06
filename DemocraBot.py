@@ -430,27 +430,6 @@ async def del_casier(ctx):
         await botMessage.delete()
         await ctx.message.delete()
 
-
-@bot.hybrid_command()
-async def voltaire(ctx, *, message):
-    await ctx.send(f"{message} : https://www.projet-voltaire.fr/")
-
-
-@bot.hybrid_command()
-async def train(ctx, *, member: discord.Member = None):
-    train = 'petit'
-
-    if member.id == 410111790970568705:
-        train = 'très grand'
-
-    await ctx.send(f"Effectivement d'après le théorème des trains {member.mention} a un {train} train !!! 🚂🚂")
-
-
-@bot.hybrid_command()
-async def aurele(ctx):
-    await ctx.send("c'est le plus bo")
-
-
 with open('lois.json', 'r', encoding='utf-8') as json_file:
     laws_data = json.load(json_file)
 
